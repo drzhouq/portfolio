@@ -9,8 +9,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        base: "#5b8c5a",
+        "base-light": "#89b046",
+        "base-lime": "#cfdc30",
+        dark: "#0d1f22",
+        beige: "#fff1db",
+        aris: "#91b884",
+      },
+      fontFamily: {
+        baloo: ['"Baloo 2"', "sans-serif"],
+      },
+      screens: {
+        xs: "480px",
       },
     },
   },

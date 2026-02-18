@@ -28,6 +28,11 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# local artwork data (production uses Vercel Blob)
+/data/
+/public/artworks/
+/public/uploads/
+
 # vercel
 .vercel
 
