@@ -38,10 +38,18 @@ async function getLocalModule() {
 
 // --- Exports ---
 
+function backfillDefaults(artworks: Artwork[]): Artwork[] {
+  return artworks.map((a) => ({
+    ...a,
+    views: a.views ?? 0,
+    totalViewTimeMs: a.totalViewTimeMs ?? 0,
+    hearts: a.hearts ?? 0,
+  }));
+}
+
 export async function getArtworks(): Promise<Artwork[]> {
-  if (USE_BLOB) return getArtworksBlob();
-  const local = await getLocalModule();
-  return local.getArtworksLocal();
+  const raw = USE_BLOB ? await getArtworksBlob() : await (await getLocalModule()).getArtworksLocal();
+  return backfillDefaults(raw);
 }
 
 export async function saveArtworks(artworks: Artwork[]): Promise<void> {

@@ -51,6 +51,9 @@ export async function POST(request: NextRequest) {
     order: artworks.length,
     createdAt: now,
     updatedAt: now,
+    views: 0,
+    totalViewTimeMs: 0,
+    hearts: 0,
   };
 
   artworks.push(newArtwork);

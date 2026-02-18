@@ -11,4 +11,7 @@ export interface Artwork {
   order: number;
   createdAt: string;
   updatedAt: string;
+  views: number;
+  totalViewTimeMs: number;
+  hearts: number;
 }

@@ -24,6 +24,9 @@ interface Artwork {
   order: number;
   createdAt: string;
   updatedAt: string;
+  views: number;
+  totalViewTimeMs: number;
+  hearts: number;
 }
 
 const JEKYLL_ROOT = join(__dirname, "../../Portfolio");
@@ -165,6 +168,9 @@ async function main() {
         order: typeof fm.order === "string" ? parseInt(fm.order, 10) : (fm.order as number) || 0,
         createdAt: now,
         updatedAt: now,
+        views: 0,
+        totalViewTimeMs: 0,
+        hearts: 0,
       });
 
       console.log(`    -> ${blob.url}`);
