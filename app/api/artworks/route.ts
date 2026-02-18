@@ -4,16 +4,22 @@ import { getArtworks, saveArtworks, uploadImage } from '@/lib/storage';
 import { verifyAuth } from '@/lib/auth';
 import type { Artwork } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
-  const artworks = await getArtworks();
-  const isAdmin = await verifyAuth();
+  try {
+    const artworks = await getArtworks();
+    const isAdmin = await verifyAuth();
 
-  if (isAdmin) {
-    return NextResponse.json(artworks);
+    if (isAdmin) {
+      return NextResponse.json(artworks);
+    }
+
+    return NextResponse.json(artworks.filter((a) => a.visible));
+  } catch (error) {
+    console.error('GET /api/artworks error:', error);
+    return NextResponse.json({ error: 'Failed to fetch artworks' }, { status: 500 });
   }
-
-  // Public: only visible artworks
-  return NextResponse.json(artworks.filter((a) => a.visible));
 }
 
 export async function POST(request: NextRequest) {
