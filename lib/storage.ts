@@ -10,7 +10,7 @@ const DEFAULT_SETTINGS: SiteSettings = { showAnnotations: true };
 async function getSettingsBlob(): Promise<SiteSettings> {
   const { blobs } = await list({ prefix: 'settings.json' });
   if (blobs.length === 0) return DEFAULT_SETTINGS;
-  const response = await fetch(blobs[0].url);
+  const response = await fetch(blobs[0].url, { cache: 'no-store' });
   return { ...DEFAULT_SETTINGS, ...(await response.json()) };
 }
 
@@ -24,7 +24,7 @@ async function saveSettingsBlob(settings: SiteSettings): Promise<void> {
 async function getArtworksBlob(): Promise<Artwork[]> {
   const { blobs } = await list({ prefix: 'artworks.json' });
   if (blobs.length === 0) return [];
-  const response = await fetch(blobs[0].url);
+  const response = await fetch(blobs[0].url, { cache: 'no-store' });
   return await response.json();
 }
 

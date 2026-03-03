@@ -12,9 +12,12 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const method = request.method;
 
+  const isAnalytics = pathname.match(/^\/api\/artworks\/[^/]+\/analytics$/) && method === 'POST';
+
   const needsAuth =
     (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) ||
-    (pathname.startsWith('/api/artworks') && ['POST', 'PUT', 'DELETE'].includes(method));
+    (pathname.startsWith('/api/artworks') && ['POST', 'PUT', 'DELETE'].includes(method) && !isAnalytics) ||
+    (pathname.startsWith('/api/settings') && ['PUT', 'DELETE'].includes(method));
 
   if (!needsAuth) return NextResponse.next();
 
@@ -32,5 +35,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/artworks/:path*'],
+  matcher: ['/admin/:path*', '/api/artworks/:path*', '/api/settings/:path*'],
 };
