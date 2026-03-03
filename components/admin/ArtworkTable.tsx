@@ -81,6 +81,9 @@ export default function ArtworkTable({ artworks, onRefresh }: ArtworkTableProps)
                   Hearts
                 </th>
                 <th className="px-4 py-3 text-sm font-medium text-dark/70">
+                  Last Viewed
+                </th>
+                <th className="px-4 py-3 text-sm font-medium text-dark/70">
                   Visible
                 </th>
                 <th className="px-4 py-3 text-sm font-medium text-dark/70">
@@ -126,6 +129,11 @@ export default function ArtworkTable({ artworks, onRefresh }: ArtworkTableProps)
                       </svg>
                       {artwork.hearts}
                     </span>
+                  </td>
+                  <td className="px-4 py-2 text-sm text-dark/70">
+                    {artwork.lastViewedAt
+                      ? new Date(artwork.lastViewedAt).toLocaleDateString()
+                      : "-"}
                   </td>
                   <td className="px-4 py-2">
                     <button

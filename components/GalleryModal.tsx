@@ -8,9 +8,10 @@ import SharePopover from "./SharePopover";
 interface GalleryModalProps {
   artwork: Artwork;
   onClose: () => void;
+  showAnnotations?: boolean;
 }
 
-export default function GalleryModal({ artwork, onClose }: GalleryModalProps) {
+export default function GalleryModal({ artwork, onClose, showAnnotations = true }: GalleryModalProps) {
   const openTimeRef = useRef(Date.now());
   const [hearted, setHearted] = useState(false);
 
@@ -91,10 +92,10 @@ export default function GalleryModal({ artwork, onClose }: GalleryModalProps) {
           />
           <div className="text-white flex-shrink-0 max-w-xs">
             <h3 className="text-2xl font-bold mb-2">{artwork.title}</h3>
-            {artwork.medium && (
+            {showAnnotations && artwork.medium && (
               <p className="text-white/70 text-sm mb-2">{artwork.medium}</p>
             )}
-            {artwork.annotation && (
+            {showAnnotations && artwork.annotation && (
               <p className="text-white/80 text-sm leading-relaxed mb-4">
                 {artwork.annotation}
               </p>

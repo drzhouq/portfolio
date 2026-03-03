@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Artwork } from "@/lib/types";
 import GalleryModal from "./GalleryModal";
@@ -11,6 +11,14 @@ interface GalleryProps {
 
 export default function Gallery({ artworks }: GalleryProps) {
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
+  const [showAnnotations, setShowAnnotations] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((s) => setShowAnnotations(s.showAnnotations ?? true))
+      .catch(() => {});
+  }, []);
 
   const sorted = [...artworks].sort((a, b) => a.order - b.order);
 
@@ -49,6 +57,7 @@ export default function Gallery({ artworks }: GalleryProps) {
         <GalleryModal
           artwork={selectedArtwork}
           onClose={() => setSelectedArtwork(null)}
+          showAnnotations={showAnnotations}
         />
       )}
     </>

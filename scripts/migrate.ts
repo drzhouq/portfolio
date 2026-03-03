@@ -25,6 +25,7 @@ interface Artwork {
   views: number;
   totalViewTimeMs: number;
   hearts: number;
+  lastViewedAt: string | null;
 }
 
 const PROJECT_ROOT = join(__dirname, "..");
@@ -164,6 +165,7 @@ function main() {
         views: 0,
         totalViewTimeMs: 0,
         hearts: 0,
+        lastViewedAt: null,
       });
     }
   }

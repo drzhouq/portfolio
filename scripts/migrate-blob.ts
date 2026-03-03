@@ -27,6 +27,7 @@ interface Artwork {
   views: number;
   totalViewTimeMs: number;
   hearts: number;
+  lastViewedAt: string | null;
 }
 
 const JEKYLL_ROOT = join(__dirname, "../../Portfolio");
@@ -171,6 +172,7 @@ async function main() {
         views: 0,
         totalViewTimeMs: 0,
         hearts: 0,
+        lastViewedAt: null,
       });
 
       console.log(`    -> ${blob.url}`);

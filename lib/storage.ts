@@ -1,9 +1,25 @@
 import { list, put, del } from '@vercel/blob';
-import { Artwork } from './types';
+import { Artwork, SiteSettings } from './types';
 
 const USE_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
 
 // --- Vercel Blob storage ---
+
+const DEFAULT_SETTINGS: SiteSettings = { showAnnotations: true };
+
+async function getSettingsBlob(): Promise<SiteSettings> {
+  const { blobs } = await list({ prefix: 'settings.json' });
+  if (blobs.length === 0) return DEFAULT_SETTINGS;
+  const response = await fetch(blobs[0].url);
+  return { ...DEFAULT_SETTINGS, ...(await response.json()) };
+}
+
+async function saveSettingsBlob(settings: SiteSettings): Promise<void> {
+  await put('settings.json', JSON.stringify(settings, null, 2), {
+    access: 'public',
+    addRandomSuffix: false,
+  });
+}
 
 async function getArtworksBlob(): Promise<Artwork[]> {
   const { blobs } = await list({ prefix: 'artworks.json' });
@@ -44,6 +60,7 @@ function backfillDefaults(artworks: Artwork[]): Artwork[] {
     views: a.views ?? 0,
     totalViewTimeMs: a.totalViewTimeMs ?? 0,
     hearts: a.hearts ?? 0,
+    lastViewedAt: a.lastViewedAt ?? null,
   }));
 }
 
@@ -62,6 +79,18 @@ export async function uploadImage(file: File): Promise<string> {
   if (USE_BLOB) return uploadImageBlob(file);
   const local = await getLocalModule();
   return local.uploadImageLocal(file);
+}
+
+export async function getSettings(): Promise<SiteSettings> {
+  if (USE_BLOB) return getSettingsBlob();
+  const local = await getLocalModule();
+  return { ...DEFAULT_SETTINGS, ...local.getSettingsLocal() };
+}
+
+export async function saveSettings(settings: SiteSettings): Promise<void> {
+  if (USE_BLOB) return saveSettingsBlob(settings);
+  const local = await getLocalModule();
+  local.saveSettingsLocal(settings);
 }
 
 export async function deleteImage(url: string): Promise<void> {

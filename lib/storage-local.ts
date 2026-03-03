@@ -1,9 +1,10 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from 'fs';
 import { join } from 'path';
-import { Artwork } from './types';
+import { Artwork, SiteSettings } from './types';
 
 const DATA_DIR = join(process.cwd(), 'data');
 const ARTWORKS_JSON = join(DATA_DIR, 'artworks.json');
+const SETTINGS_JSON = join(DATA_DIR, 'settings.json');
 const UPLOAD_DIR = join(process.cwd(), 'public', 'uploads');
 
 function ensureDirs() {
@@ -20,6 +21,17 @@ export function getArtworksLocal(): Artwork[] {
 export function saveArtworksLocal(artworks: Artwork[]): void {
   ensureDirs();
   writeFileSync(ARTWORKS_JSON, JSON.stringify(artworks, null, 2));
+}
+
+export function getSettingsLocal(): SiteSettings {
+  ensureDirs();
+  if (!existsSync(SETTINGS_JSON)) return { showAnnotations: true };
+  return JSON.parse(readFileSync(SETTINGS_JSON, 'utf-8'));
+}
+
+export function saveSettingsLocal(settings: SiteSettings): void {
+  ensureDirs();
+  writeFileSync(SETTINGS_JSON, JSON.stringify(settings, null, 2));
 }
 
 export async function uploadImageLocal(file: File): Promise<string> {

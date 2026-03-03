@@ -20,6 +20,7 @@ export async function POST(
 
   if (event === 'view') {
     artworks[index].views += 1;
+    artworks[index].lastViewedAt = new Date().toISOString();
   } else if (event === 'view_time') {
     const viewTimeMs = Number(body.viewTimeMs);
     if (viewTimeMs > 0) {

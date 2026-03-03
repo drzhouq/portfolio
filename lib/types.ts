@@ -14,4 +14,9 @@ export interface Artwork {
   views: number;
   totalViewTimeMs: number;
   hearts: number;
+  lastViewedAt: string | null;
+}
+
+export interface SiteSettings {
+  showAnnotations: boolean;
 }

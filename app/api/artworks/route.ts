@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
     views: 0,
     totalViewTimeMs: 0,
     hearts: 0,
+    lastViewedAt: null,
   };
 
   artworks.push(newArtwork);
