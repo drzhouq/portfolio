@@ -7,14 +7,10 @@ const USE_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
 
 const DEFAULT_SETTINGS: SiteSettings = { showAnnotations: true };
 
-function bustCache(url: string): string {
-  return `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`;
-}
-
 async function getSettingsBlob(): Promise<SiteSettings> {
   const { blobs } = await list({ prefix: 'settings.json' });
   if (blobs.length === 0) return DEFAULT_SETTINGS;
-  const response = await fetch(bustCache(blobs[0].downloadUrl), { cache: 'no-store' });
+  const response = await fetch(blobs[0].downloadUrl, { cache: 'no-store' });
   return { ...DEFAULT_SETTINGS, ...(await response.json()) };
 }
 
@@ -22,13 +18,14 @@ async function saveSettingsBlob(settings: SiteSettings): Promise<void> {
   await put('settings.json', JSON.stringify(settings, null, 2), {
     access: 'public',
     addRandomSuffix: false,
+    allowOverwrite: true,
   });
 }
 
 async function getArtworksBlob(): Promise<Artwork[]> {
   const { blobs } = await list({ prefix: 'artworks.json' });
   if (blobs.length === 0) return [];
-  const response = await fetch(bustCache(blobs[0].downloadUrl), { cache: 'no-store' });
+  const response = await fetch(blobs[0].downloadUrl, { cache: 'no-store' });
   return await response.json();
 }
 
@@ -36,6 +33,7 @@ async function saveArtworksBlob(artworks: Artwork[]): Promise<void> {
   await put('artworks.json', JSON.stringify(artworks, null, 2), {
     access: 'public',
     addRandomSuffix: false,
+    allowOverwrite: true,
   });
 }
 
