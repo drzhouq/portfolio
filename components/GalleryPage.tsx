@@ -15,7 +15,7 @@ export default function GalleryPage({ category }: GalleryPageProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/artworks")
+    fetch(`/api/artworks?t=${Date.now()}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((data: Artwork[]) => {
         setArtworks(data.filter((a) => a.category === category));

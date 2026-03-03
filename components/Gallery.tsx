@@ -14,7 +14,7 @@ export default function Gallery({ artworks }: GalleryProps) {
   const [showAnnotations, setShowAnnotations] = useState(true);
 
   useEffect(() => {
-    fetch("/api/settings")
+    fetch(`/api/settings?t=${Date.now()}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((s) => setShowAnnotations(s.showAnnotations ?? true))
       .catch(() => {});

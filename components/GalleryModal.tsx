@@ -96,7 +96,7 @@ export default function GalleryModal({ artwork, onClose, showAnnotations = true 
               <p className="text-white/70 text-sm mb-2">{artwork.medium}</p>
             )}
             {showAnnotations && artwork.annotation && (
-              <p className="text-white/80 text-sm leading-relaxed mb-4">
+              <p className="text-white/80 text-sm leading-relaxed mb-4 whitespace-pre-line">
                 {artwork.annotation}
               </p>
             )}

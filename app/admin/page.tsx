@@ -12,7 +12,7 @@ export default function AdminDashboard() {
 
   const fetchArtworks = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/artworks");
+    const res = await fetch(`/api/artworks?t=${Date.now()}`, { cache: "no-store" });
     const data = await res.json();
     setArtworks(data);
     setLoading(false);
@@ -20,7 +20,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchArtworks();
-    fetch("/api/settings").then((r) => r.json()).then(setSettings).catch(() => {});
+    fetch(`/api/settings?t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).then(setSettings).catch(() => {});
   }, [fetchArtworks]);
 
   const toggleAnnotations = async () => {
