@@ -41,13 +41,16 @@ export default function ArtworkTable({ artworks, onRefresh, onUpdate }: ArtworkT
 
   const handleSave = async (updates: Partial<Artwork>) => {
     if (!editingArtwork) return;
-    await fetch(`/api/artworks/${editingArtwork.id}`, {
+    const res = await fetch(`/api/artworks/${editingArtwork.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
     });
+    if (res.ok) {
+      const updated: Artwork = await res.json();
+      onUpdate(updated);
+    }
     setEditingArtwork(null);
-    onRefresh();
   };
 
   const moveOrder = async (artwork: Artwork, direction: -1 | 1) => {
