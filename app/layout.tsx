@@ -14,6 +14,9 @@ const baloo = Baloo_2({
 export const metadata: Metadata = {
   title: "Aris Zhou Illustration Portfolio",
   description: "Portfolio of Aris Zhou, illustrator and visual artist.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
