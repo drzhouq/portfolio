@@ -18,6 +18,10 @@ export default function AdminDashboard() {
     setLoading(false);
   }, []);
 
+  const updateArtwork = useCallback((updated: Artwork) => {
+    setArtworks((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+  }, []);
+
   useEffect(() => {
     fetchArtworks();
     fetch(`/api/settings?t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).then(setSettings).catch(() => {});
@@ -66,7 +70,7 @@ export default function AdminDashboard() {
           {loading ? (
             <p className="text-dark/50">Loading...</p>
           ) : (
-            <ArtworkTable artworks={artworks} onRefresh={fetchArtworks} />
+            <ArtworkTable artworks={artworks} onRefresh={fetchArtworks} onUpdate={updateArtwork} />
           )}
         </div>
       </div>

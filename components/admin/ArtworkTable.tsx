@@ -7,21 +7,25 @@ import ArtworkEditModal from "./ArtworkEditModal";
 interface ArtworkTableProps {
   artworks: Artwork[];
   onRefresh: () => void;
+  onUpdate: (updated: Artwork) => void;
 }
 
-export default function ArtworkTable({ artworks, onRefresh }: ArtworkTableProps) {
+export default function ArtworkTable({ artworks, onRefresh, onUpdate }: ArtworkTableProps) {
   const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const sorted = [...artworks].sort((a, b) => a.order - b.order);
 
   const toggleVisibility = async (artwork: Artwork) => {
-    await fetch(`/api/artworks/${artwork.id}`, {
+    const res = await fetch(`/api/artworks/${artwork.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ visible: !artwork.visible }),
     });
-    onRefresh();
+    if (res.ok) {
+      const updated: Artwork = await res.json();
+      onUpdate(updated);
+    }
   };
 
   const handleDelete = async (id: string) => {
