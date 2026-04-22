@@ -28,6 +28,7 @@ const transitionVariants = {
 export default function KioskPage() {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [config, setConfig] = useState<Pick<KioskConfig, "intervalSeconds" | "showOverlay" | "showDescription" | "transition"> | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [started, setStarted] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -43,7 +44,9 @@ export default function KioskPage() {
           setArtworks(data.artworks);
           setConfig(data.config);
         }
-      });
+      })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
   }, []);
 
   // Preload next image
@@ -122,7 +125,7 @@ export default function KioskPage() {
     (el.requestFullscreen?.() || (el as any).webkitRequestFullscreen?.())?.catch(() => {});
   };
 
-  if (!config) {
+  if (!loaded) {
     return (
       <div className="fixed inset-0 z-[9999] bg-black flex items-center justify-center">
         <p className="text-white/50 text-lg">Loading...</p>
@@ -130,7 +133,7 @@ export default function KioskPage() {
     );
   }
 
-  if (artworks.length === 0) {
+  if (!config || artworks.length === 0) {
     return (
       <div className="fixed inset-0 z-[9999] bg-black flex items-center justify-center">
         <p className="text-white/50 text-lg">No kiosk presentation configured.</p>
