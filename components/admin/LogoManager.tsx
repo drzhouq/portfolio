@@ -13,11 +13,13 @@ function ImageUploadField({
   currentUrl,
   fallback,
   onUploaded,
+  onReset,
 }: {
   label: string;
   currentUrl?: string | null;
   fallback: string;
   onUploaded: (url: string) => void;
+  onReset: () => void;
 }) {
   const [uploading, setUploading] = useState(false);
 
@@ -45,16 +47,26 @@ function ImageUploadField({
       />
       <div className="flex-1">
         <p className="text-sm font-medium text-dark">{label}</p>
-        <label className="text-sm text-base cursor-pointer hover:text-base-light">
-          {uploading ? "Uploading..." : "Replace"}
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleUpload}
-            disabled={uploading}
-          />
-        </label>
+        <div className="flex gap-3">
+          <label className="text-sm text-base cursor-pointer hover:text-base-light">
+            {uploading ? "Uploading..." : "Replace"}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleUpload}
+              disabled={uploading}
+            />
+          </label>
+          {currentUrl && (
+            <button
+              onClick={onReset}
+              className="text-sm text-dark/40 hover:text-red-500 transition-colors"
+            >
+              Reset
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -70,18 +82,21 @@ export default function LogoManager({ settings, onUpdate }: LogoManagerProps) {
           currentUrl={settings.logoIconUrl}
           fallback="/images/logos/arislogodark.svg"
           onUploaded={(url) => onUpdate({ logoIconUrl: url })}
+          onReset={() => onUpdate({ logoIconUrl: null })}
         />
         <ImageUploadField
           label="Logo Name"
           currentUrl={settings.logoNameUrl}
           fallback="/images/logos/arisnamedark.svg"
           onUploaded={(url) => onUpdate({ logoNameUrl: url })}
+          onReset={() => onUpdate({ logoNameUrl: null })}
         />
         <ImageUploadField
           label="Profile Photo"
           currentUrl={settings.profilePhotoUrl}
           fallback="/images/profile.png"
           onUploaded={(url) => onUpdate({ profilePhotoUrl: url })}
+          onReset={() => onUpdate({ profilePhotoUrl: null })}
         />
       </div>
     </div>

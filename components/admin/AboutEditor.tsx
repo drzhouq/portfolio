@@ -70,19 +70,37 @@ export default function AboutEditor({ settings, onUpdate }: AboutEditorProps) {
     setDirty(false);
   };
 
+  const handleReset = async () => {
+    setBio(DEFAULT_BIO);
+    setSkills(DEFAULT_SKILLS);
+    setSaving(true);
+    await onUpdate({ aboutBio: null as unknown as string[], aboutSkills: null as unknown as AboutSkill[] });
+    setSaving(false);
+    setDirty(false);
+  };
+
   return (
     <div className="bg-white rounded-lg p-4 shadow-sm border border-dark/10">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-dark">About Me Content</h3>
-        {dirty && (
+        <div className="flex gap-2">
           <button
-            onClick={handleSave}
+            onClick={handleReset}
             disabled={saving}
-            className="text-sm px-4 py-1.5 bg-base text-white rounded hover:bg-base-light transition-colors disabled:opacity-50"
+            className="text-sm px-3 py-1.5 text-dark/40 hover:text-red-500 transition-colors disabled:opacity-50"
           >
-            {saving ? "Saving..." : "Save Changes"}
+            Reset to defaults
           </button>
-        )}
+          {dirty && (
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="text-sm px-4 py-1.5 bg-base text-white rounded hover:bg-base-light transition-colors disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Bio paragraphs */}
