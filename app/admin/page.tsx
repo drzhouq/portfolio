@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { Artwork, SiteSettings } from "@/lib/types";
 import ArtworkUploader from "@/components/admin/ArtworkUploader";
 import ArtworkTable from "@/components/admin/ArtworkTable";
@@ -66,6 +67,14 @@ export default function AdminDashboard() {
             />
           </button>
         </div>
+
+        <Link
+          href="/admin/kiosk"
+          className="block bg-white rounded-lg p-4 shadow-sm border border-dark/10 hover:border-base/30 transition-colors"
+        >
+          <h3 className="text-sm font-semibold text-dark">Kiosk / Presentation Mode</h3>
+          <p className="text-xs text-dark/50">Configure fullscreen slideshow of selected artworks</p>
+        </Link>
 
         <LogoManager settings={settings} onUpdate={updateSettings} />
 

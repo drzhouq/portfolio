@@ -31,18 +31,22 @@ export default function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-beige">
       <div className="max-w-[1200px] mx-auto flex items-center justify-between px-4 py-2">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <img
-            src={logoIcon}
-            alt="Aris Zhou Logo"
-            className="w-[50px] h-[50px] object-contain"
-          />
-          <img
-            src={logoName}
-            alt="Aris Zhou"
-            className="hidden sm:block h-[50px] w-auto object-contain"
-          />
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/">
+            <img
+              src={logoIcon}
+              alt="Aris Zhou Logo"
+              className="w-[50px] h-[50px] object-contain"
+            />
+          </Link>
+          <Link href="/kiosk" className="hidden sm:block">
+            <img
+              src={logoName}
+              alt="Aris Zhou"
+              className="h-[50px] w-auto object-contain"
+            />
+          </Link>
+        </div>
 
         {/* Mobile hamburger */}
         <button

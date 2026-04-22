@@ -22,6 +22,14 @@ export interface AboutSkill {
   desc: string;
 }
 
+export interface KioskConfig {
+  artworkIds: string[];
+  intervalSeconds: number;
+  showOverlay: boolean;
+  showDescription: boolean;
+  transition: 'fade' | 'crossfade' | 'slide';
+}
+
 export interface SiteSettings {
   showAnnotations: boolean;
   logoIconUrl?: string | null;
@@ -29,4 +37,5 @@ export interface SiteSettings {
   profilePhotoUrl?: string | null;
   aboutBio?: string[];
   aboutSkills?: AboutSkill[];
+  kiosk?: KioskConfig;
 }
