@@ -1,8 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Artwork } from "@/lib/types";
 import ArtworkEditModal from "./ArtworkEditModal";
+
+type SortKey = "title" | "category" | "views" | "avgTime" | "hearts" | "lastViewedAt" | "visible" | "order";
+type SortDir = "asc" | "desc";
+
+function getAvgTime(a: Artwork): number {
+  return a.views > 0 ? a.totalViewTimeMs / a.views : 0;
+}
+
+function comparator(key: SortKey, dir: SortDir) {
+  return (a: Artwork, b: Artwork) => {
+    let cmp = 0;
+    switch (key) {
+      case "title":
+        cmp = a.title.localeCompare(b.title);
+        break;
+      case "category":
+        cmp = a.category.localeCompare(b.category);
+        break;
+      case "views":
+        cmp = a.views - b.views;
+        break;
+      case "avgTime":
+        cmp = getAvgTime(a) - getAvgTime(b);
+        break;
+      case "hearts":
+        cmp = a.hearts - b.hearts;
+        break;
+      case "lastViewedAt":
+        cmp = (a.lastViewedAt || "").localeCompare(b.lastViewedAt || "");
+        break;
+      case "visible":
+        cmp = Number(a.visible) - Number(b.visible);
+        break;
+      case "order":
+        cmp = a.order - b.order;
+        break;
+    }
+    return dir === "asc" ? cmp : -cmp;
+  };
+}
 
 interface ArtworkTableProps {
   artworks: Artwork[];
@@ -13,8 +53,29 @@ interface ArtworkTableProps {
 export default function ArtworkTable({ artworks, onRefresh, onUpdate }: ArtworkTableProps) {
   const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("order");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
-  const sorted = [...artworks].sort((a, b) => a.order - b.order);
+  const sorted = useMemo(
+    () => [...artworks].sort(comparator(sortKey, sortDir)),
+    [artworks, sortKey, sortDir]
+  );
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const sortIndicator = (key: SortKey) => {
+    if (sortKey !== key) return null;
+    return <span className="ml-1">{sortDir === "asc" ? "↑" : "↓"}</span>;
+  };
+
+  const thClass = "px-4 py-3 text-sm font-medium text-dark/70 cursor-pointer select-none hover:text-dark transition-colors";
 
   const toggleVisibility = async (artwork: Artwork) => {
     const res = await fetch(`/api/artworks/${artwork.id}`, {
@@ -72,29 +133,29 @@ export default function ArtworkTable({ artworks, onRefresh, onUpdate }: ArtworkT
                 <th className="px-4 py-3 text-sm font-medium text-dark/70">
                   Image
                 </th>
-                <th className="px-4 py-3 text-sm font-medium text-dark/70">
-                  Title
+                <th className={thClass} onClick={() => handleSort("title")}>
+                  Title{sortIndicator("title")}
                 </th>
-                <th className="px-4 py-3 text-sm font-medium text-dark/70">
-                  Category
+                <th className={thClass} onClick={() => handleSort("category")}>
+                  Category{sortIndicator("category")}
                 </th>
-                <th className="px-4 py-3 text-sm font-medium text-dark/70">
-                  Views
+                <th className={thClass} onClick={() => handleSort("views")}>
+                  Views{sortIndicator("views")}
                 </th>
-                <th className="px-4 py-3 text-sm font-medium text-dark/70">
-                  Avg Time
+                <th className={thClass} onClick={() => handleSort("avgTime")}>
+                  Avg Time{sortIndicator("avgTime")}
                 </th>
-                <th className="px-4 py-3 text-sm font-medium text-dark/70">
-                  Hearts
+                <th className={thClass} onClick={() => handleSort("hearts")}>
+                  Hearts{sortIndicator("hearts")}
                 </th>
-                <th className="px-4 py-3 text-sm font-medium text-dark/70">
-                  Last Viewed
+                <th className={thClass} onClick={() => handleSort("lastViewedAt")}>
+                  Last Viewed{sortIndicator("lastViewedAt")}
                 </th>
-                <th className="px-4 py-3 text-sm font-medium text-dark/70">
-                  Visible
+                <th className={thClass} onClick={() => handleSort("visible")}>
+                  Visible{sortIndicator("visible")}
                 </th>
-                <th className="px-4 py-3 text-sm font-medium text-dark/70">
-                  Order
+                <th className={thClass} onClick={() => handleSort("order")}>
+                  Order{sortIndicator("order")}
                 </th>
                 <th className="px-4 py-3 text-sm font-medium text-dark/70">
                   Actions
