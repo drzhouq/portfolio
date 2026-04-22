@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { SiteSettings } from "@/lib/types";
 
 const navLinks = [
   { title: "Illustrations", url: "/" },
@@ -15,24 +15,32 @@ const navLinks = [
 export default function Header() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/settings?t=${Date.now()}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then(setSettings)
+      .catch(() => {});
+  }, []);
+
+  const logoIcon = settings?.logoIconUrl || "/images/logos/arislogodark.svg";
+  const logoName = settings?.logoNameUrl || "/images/logos/arisnamedark.svg";
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-beige">
       <div className="max-w-[1200px] mx-auto flex items-center justify-between px-4 py-2">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <Image
-            src="/images/logos/arislogodark.svg"
+          <img
+            src={logoIcon}
             alt="Aris Zhou Logo"
-            width={50}
-            height={50}
+            className="w-[50px] h-[50px] object-contain"
           />
-          <Image
-            src="/images/logos/arisnamedark.svg"
+          <img
+            src={logoName}
             alt="Aris Zhou"
-            width={120}
-            height={50}
-            className="hidden sm:block"
+            className="hidden sm:block h-[50px] w-auto object-contain"
           />
         </Link>
 

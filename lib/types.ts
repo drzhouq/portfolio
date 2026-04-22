@@ -17,6 +17,16 @@ export interface Artwork {
   lastViewedAt: string | null;
 }
 
+export interface AboutSkill {
+  title: string;
+  desc: string;
+}
+
 export interface SiteSettings {
   showAnnotations: boolean;
+  logoIconUrl?: string | null;
+  logoNameUrl?: string | null;
+  profilePhotoUrl?: string | null;
+  aboutBio?: string[];
+  aboutSkills?: AboutSkill[];
 }

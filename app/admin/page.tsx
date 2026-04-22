@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { Artwork, SiteSettings } from "@/lib/types";
 import ArtworkUploader from "@/components/admin/ArtworkUploader";
 import ArtworkTable from "@/components/admin/ArtworkTable";
+import LogoManager from "@/components/admin/LogoManager";
+import AboutEditor from "@/components/admin/AboutEditor";
 
 export default function AdminDashboard() {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
@@ -27,14 +29,18 @@ export default function AdminDashboard() {
     fetch(`/api/settings?t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).then(setSettings).catch(() => {});
   }, [fetchArtworks]);
 
-  const toggleAnnotations = async () => {
-    const updated = { ...settings, showAnnotations: !settings.showAnnotations };
-    setSettings(updated);
+  const updateSettings = async (updates: Partial<SiteSettings>) => {
+    const merged = { ...settings, ...updates };
+    setSettings(merged);
     await fetch("/api/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updated),
+      body: JSON.stringify(merged),
     });
+  };
+
+  const toggleAnnotations = () => {
+    updateSettings({ showAnnotations: !settings.showAnnotations });
   };
 
   return (
@@ -60,6 +66,10 @@ export default function AdminDashboard() {
             />
           </button>
         </div>
+
+        <LogoManager settings={settings} onUpdate={updateSettings} />
+
+        <AboutEditor settings={settings} onUpdate={updateSettings} />
 
         <ArtworkUploader onUploaded={fetchArtworks} />
 
