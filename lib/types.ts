@@ -30,8 +30,11 @@ export interface KioskConfig {
   transition: 'fade' | 'crossfade' | 'slide';
 }
 
+export type GalleryLayout = 'masonry' | 'grid' | 'featured' | 'horizontal' | 'justified';
+
 export interface SiteSettings {
   showAnnotations: boolean;
+  galleryLayout?: GalleryLayout;
   logoIconUrl?: string | null;
   logoNameUrl?: string | null;
   profilePhotoUrl?: string | null;

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Artwork, SiteSettings } from "@/lib/types";
+import { Artwork, SiteSettings, GalleryLayout } from "@/lib/types";
 import ArtworkUploader from "@/components/admin/ArtworkUploader";
 import ArtworkTable from "@/components/admin/ArtworkTable";
 import LogoManager from "@/components/admin/LogoManager";
@@ -66,6 +66,26 @@ export default function AdminDashboard() {
               }`}
             />
           </button>
+        </div>
+
+        <div className="bg-white rounded-lg p-4 shadow-sm border border-dark/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-dark">Gallery Layout</h3>
+              <p className="text-xs text-dark/50">Choose how artworks are displayed on gallery pages</p>
+            </div>
+            <select
+              value={settings.galleryLayout ?? "masonry"}
+              onChange={(e) => updateSettings({ galleryLayout: e.target.value as GalleryLayout })}
+              className="border border-dark/20 rounded px-3 py-2 text-sm focus:outline-none focus:border-base"
+            >
+              <option value="masonry">Masonry</option>
+              <option value="grid">Grid</option>
+              <option value="featured">Featured</option>
+              <option value="horizontal">Horizontal Scroll</option>
+              <option value="justified">Justified</option>
+            </select>
+          </div>
         </div>
 
         <Link
