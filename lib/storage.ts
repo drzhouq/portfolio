@@ -1,78 +1,88 @@
-import { put, del } from '@vercel/blob';
 import { Artwork, MerchItem, SiteSettings } from './types';
-
-const USE_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
-
-// --- Vercel Blob storage ---
 
 const DEFAULT_SETTINGS: SiteSettings = { showAnnotations: true };
 
-// Public blobs are saved with a stable, predictable path (addRandomSuffix: false),
-// so we read them by fetching their public URL directly instead of calling list().
-// list() is a Vercel "advanced operation" that's tightly rate-limited on the Hobby
-// plan (2k/mo) — calling it on every request exhausts the quota and pauses the store.
-// A plain CDN fetch only counts as data transfer, so reads become effectively free.
-function blobPublicUrl(pathname: string): string {
-  // Allow an explicit override if token-based derivation ever fails.
-  const explicit = process.env.BLOB_PUBLIC_BASE_URL;
-  if (explicit) return `${explicit.replace(/\/+$/, '')}/${pathname}`;
-  // Token format: vercel_blob_rw_<STORE_ID>_<RANDOM>; public host is
-  // https://<STORE_ID>.public.blob.vercel-storage.com
-  const storeId = (process.env.BLOB_READ_WRITE_TOKEN ?? '').split('_')[3] ?? '';
-  return `https://${storeId}.public.blob.vercel-storage.com/${pathname}`;
+const isDev = process.env.NODE_ENV === 'development';
+
+// --- Cloudflare R2 storage ---
+
+function getCloudflareEnv(): { PORTFOLIO_BUCKET: R2Bucket; R2_PUBLIC_URL?: string } {
+  const { getCloudflareContext } = require('@opennextjs/cloudflare');
+  const ctx = getCloudflareContext();
+  return ctx.env;
 }
 
-async function getSettingsBlob(): Promise<SiteSettings> {
-  const response = await fetch(blobPublicUrl('settings.json'), { cache: 'no-store' });
-  if (!response.ok) return DEFAULT_SETTINGS;
-  return { ...DEFAULT_SETTINGS, ...(await response.json()) };
+function getBucket(): R2Bucket {
+  return getCloudflareEnv().PORTFOLIO_BUCKET;
 }
 
-async function saveSettingsBlob(settings: SiteSettings): Promise<void> {
-  await put('settings.json', JSON.stringify(settings, null, 2), {
-    access: 'public',
-    addRandomSuffix: false,
-    allowOverwrite: true,
+async function getSettingsR2(): Promise<SiteSettings> {
+  const bucket = getBucket();
+  const obj = await bucket.get('settings.json');
+  if (!obj) return DEFAULT_SETTINGS;
+  const text = await obj.text();
+  return { ...DEFAULT_SETTINGS, ...JSON.parse(text) };
+}
+
+async function saveSettingsR2(settings: SiteSettings): Promise<void> {
+  const bucket = getBucket();
+  await bucket.put('settings.json', JSON.stringify(settings, null, 2), {
+    httpMetadata: { contentType: 'application/json' },
   });
 }
 
-async function getArtworksBlob(): Promise<Artwork[]> {
-  const response = await fetch(blobPublicUrl('artworks.json'), { cache: 'no-store' });
-  if (!response.ok) return [];
-  return await response.json();
+async function getArtworksR2(): Promise<Artwork[]> {
+  const bucket = getBucket();
+  const obj = await bucket.get('artworks.json');
+  if (!obj) return [];
+  const text = await obj.text();
+  return JSON.parse(text);
 }
 
-async function saveArtworksBlob(artworks: Artwork[]): Promise<void> {
-  await put('artworks.json', JSON.stringify(artworks, null, 2), {
-    access: 'public',
-    addRandomSuffix: false,
-    allowOverwrite: true,
+async function saveArtworksR2(artworks: Artwork[]): Promise<void> {
+  const bucket = getBucket();
+  await bucket.put('artworks.json', JSON.stringify(artworks, null, 2), {
+    httpMetadata: { contentType: 'application/json' },
   });
 }
 
-async function getMerchBlob(): Promise<MerchItem[]> {
-  const response = await fetch(blobPublicUrl('merch.json'), { cache: 'no-store' });
-  if (!response.ok) return [];
-  return await response.json();
+async function getMerchR2(): Promise<MerchItem[]> {
+  const bucket = getBucket();
+  const obj = await bucket.get('merch.json');
+  if (!obj) return [];
+  const text = await obj.text();
+  return JSON.parse(text);
 }
 
-async function saveMerchBlob(items: MerchItem[]): Promise<void> {
-  await put('merch.json', JSON.stringify(items, null, 2), {
-    access: 'public',
-    addRandomSuffix: false,
-    allowOverwrite: true,
+async function saveMerchR2(items: MerchItem[]): Promise<void> {
+  const bucket = getBucket();
+  await bucket.put('merch.json', JSON.stringify(items, null, 2), {
+    httpMetadata: { contentType: 'application/json' },
   });
 }
 
-async function uploadImageBlob(file: File, prefix: string): Promise<string> {
-  const blob = await put(`${prefix}/${Date.now()}-${file.name}`, file, {
-    access: 'public',
+async function uploadImageR2(file: File, prefix: string): Promise<string> {
+  const bucket = getBucket();
+  const key = `${prefix}/${Date.now()}-${file.name}`;
+  const bytes = await file.arrayBuffer();
+  await bucket.put(key, bytes, {
+    httpMetadata: { contentType: file.type },
   });
-  return blob.url;
+  // Build the public URL using the R2_PUBLIC_URL env var set in wrangler config
+  const publicUrl = getCloudflareEnv().R2_PUBLIC_URL || '';
+  return `${publicUrl}/${key}`;
 }
 
-async function deleteImageBlob(url: string): Promise<void> {
-  try { await del(url); } catch { /* may already be deleted */ }
+async function deleteImageR2(url: string): Promise<void> {
+  try {
+    const bucket = getBucket();
+    // Extract the key from the full URL by finding the path after the domain
+    const urlObj = new URL(url);
+    const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.slice(1) : urlObj.pathname;
+    await bucket.delete(key);
+  } catch {
+    /* may already be deleted */
+  }
 }
 
 // --- Local storage (lazy-loaded to avoid fs import in production) ---
@@ -94,48 +104,62 @@ function backfillDefaults(artworks: Artwork[]): Artwork[] {
 }
 
 export async function getArtworks(): Promise<Artwork[]> {
-  const raw = USE_BLOB ? await getArtworksBlob() : await (await getLocalModule()).getArtworksLocal();
+  const raw = isDev ? await (await getLocalModule()).getArtworksLocal() : await getArtworksR2();
   return backfillDefaults(raw);
 }
 
 export async function saveArtworks(artworks: Artwork[]): Promise<void> {
-  if (USE_BLOB) return saveArtworksBlob(artworks);
-  const local = await getLocalModule();
-  local.saveArtworksLocal(artworks);
+  if (isDev) {
+    const local = await getLocalModule();
+    return local.saveArtworksLocal(artworks);
+  }
+  return saveArtworksR2(artworks);
 }
 
 export async function getMerch(): Promise<MerchItem[]> {
-  if (USE_BLOB) return getMerchBlob();
-  const local = await getLocalModule();
-  return local.getMerchLocal();
+  if (isDev) {
+    const local = await getLocalModule();
+    return local.getMerchLocal();
+  }
+  return getMerchR2();
 }
 
 export async function saveMerch(items: MerchItem[]): Promise<void> {
-  if (USE_BLOB) return saveMerchBlob(items);
-  const local = await getLocalModule();
-  local.saveMerchLocal(items);
+  if (isDev) {
+    const local = await getLocalModule();
+    return local.saveMerchLocal(items);
+  }
+  return saveMerchR2(items);
 }
 
 export async function uploadImage(file: File, prefix: string = 'artworks'): Promise<string> {
-  if (USE_BLOB) return uploadImageBlob(file, prefix);
-  const local = await getLocalModule();
-  return local.uploadImageLocal(file, prefix);
+  if (isDev) {
+    const local = await getLocalModule();
+    return local.uploadImageLocal(file, prefix);
+  }
+  return uploadImageR2(file, prefix);
 }
 
 export async function getSettings(): Promise<SiteSettings> {
-  if (USE_BLOB) return getSettingsBlob();
-  const local = await getLocalModule();
-  return { ...DEFAULT_SETTINGS, ...local.getSettingsLocal() };
+  if (isDev) {
+    const local = await getLocalModule();
+    return { ...DEFAULT_SETTINGS, ...local.getSettingsLocal() };
+  }
+  return getSettingsR2();
 }
 
 export async function saveSettings(settings: SiteSettings): Promise<void> {
-  if (USE_BLOB) return saveSettingsBlob(settings);
-  const local = await getLocalModule();
-  local.saveSettingsLocal(settings);
+  if (isDev) {
+    const local = await getLocalModule();
+    return local.saveSettingsLocal(settings);
+  }
+  return saveSettingsR2(settings);
 }
 
 export async function deleteImage(url: string): Promise<void> {
-  if (USE_BLOB) return deleteImageBlob(url);
-  const local = await getLocalModule();
-  local.deleteImageLocal(url);
+  if (isDev) {
+    const local = await getLocalModule();
+    return local.deleteImageLocal(url);
+  }
+  return deleteImageR2(url);
 }

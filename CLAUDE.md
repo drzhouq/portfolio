@@ -4,24 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Illustration portfolio website for Aris Zhou, built with Next.js 14 (App Router), React 18, TypeScript, and Tailwind CSS. Deployed on Vercel.
+Illustration portfolio website for Aris Zhou, built with Next.js 14 (App Router), React 18, TypeScript, and Tailwind CSS. Deployed on Cloudflare Workers with R2 storage.
 
 ## Commands
 
 - `npm run dev` — Start dev server (localhost:3000)
-- `npm run build` — Production build
+- `npm run build` — Production build (uses @opennextjs/cloudflare)
+- `npm run deploy` — Deploy to Cloudflare Workers via Wrangler
 - `npm run lint` — ESLint
-- `npx tsx scripts/migrate-blob.ts` — Migrate local data to Vercel Blob
 
 ## Architecture
 
 ### Storage Layer (lib/storage.ts)
 
 Dual-mode storage abstracted behind a single interface:
-- **Production**: Vercel Blob (`@vercel/blob`) — activated when `BLOB_READ_WRITE_TOKEN` env var is set
-- **Local dev**: JSON files in `data/` directory via `lib/storage-local.ts` (lazy-imported to avoid fs in production)
+- **Production**: Cloudflare R2 — accessed via `@cloudflare/next-on-pages` `getRequestContext()` for the `PORTFOLIO_BUCKET` binding
+- **Local dev**: JSON files in `data/` directory via `lib/storage-local.ts` (lazy-imported to avoid fs in production). Activated when `NODE_ENV === 'development'`.
 
-Artworks and settings are stored as JSON blobs (`artworks.json`, `settings.json`). Images go to `artworks/` prefix in Blob storage or `public/uploads/` locally.
+Artworks and settings are stored as JSON objects (`artworks.json`, `settings.json`). Images go to `artworks/` prefix in R2 or `public/uploads/` locally. Configuration lives in `wrangler.jsonc`.
 
 ### Auth
 

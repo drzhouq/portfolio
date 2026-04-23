@@ -1,0 +1,14 @@
+{
+  "name": "portfolio",
+  "compatibility_date": "2025-04-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "r2_buckets": [
+    {
+      "binding": "PORTFOLIO_BUCKET",
+      "bucket_name": "portfolio-assets"
+    }
+  ],
+  "vars": {
+    "ADMIN_PASSWORD": ""
+  }
+}

@@ -33,7 +33,7 @@ export default function KioskPage() {
   const [started, setStarted] = useState(false);
   const [paused, setPaused] = useState(false);
   const [cursorHidden, setCursorHidden] = useState(false);
-  const cursorTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const cursorTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Fetch kiosk data
   useEffect(() => {

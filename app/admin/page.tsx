@@ -55,7 +55,7 @@ export default function AdminDashboard() {
 
   const merchCategories = settings.merchCategories ?? [...DEFAULT_MERCH_CATEGORIES];
 
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const updateSettings = async (updates: Partial<SiteSettings>) => {
     const merged = { ...settings, ...updates };
