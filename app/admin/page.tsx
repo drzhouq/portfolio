@@ -1,18 +1,22 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import { Artwork, SiteSettings, GalleryLayout } from "@/lib/types";
 import { AVAILABLE_FONTS } from "@/components/ThemeProvider";
 import ArtworkUploader from "@/components/admin/ArtworkUploader";
 import ArtworkTable from "@/components/admin/ArtworkTable";
 import LogoManager from "@/components/admin/LogoManager";
 import AboutEditor from "@/components/admin/AboutEditor";
+import KioskEditor from "@/components/admin/KioskEditor";
+
+const TABS = ["Art Pieces", "About Me", "Appearance", "Kiosk"] as const;
+type Tab = (typeof TABS)[number];
 
 export default function AdminDashboard() {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<SiteSettings>({ showAnnotations: true });
+  const [activeTab, setActiveTab] = useState<Tab>("Art Pieces");
 
   const fetchArtworks = useCallback(async () => {
     setLoading(true);
@@ -41,36 +45,73 @@ export default function AdminDashboard() {
     });
   };
 
-  const toggleAnnotations = () => {
-    updateSettings({ showAnnotations: !settings.showAnnotations });
-  };
-
   return (
     <div className="max-w-[1200px] mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-dark mb-8">Admin Dashboard</h1>
+      <h1 className="text-3xl font-bold text-dark mb-6">Admin Dashboard</h1>
 
-      <div className="space-y-8">
-        <div className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm border border-dark/10">
-          <div>
-            <h3 className="text-sm font-semibold text-dark">Show Annotations</h3>
-            <p className="text-xs text-dark/50">Display descriptions and medium in the gallery modal</p>
-          </div>
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-dark/10 mb-8">
+        {TABS.map((tab) => (
           <button
-            onClick={toggleAnnotations}
-            className={`w-10 h-6 rounded-full transition-colors relative ${
-              settings.showAnnotations ? "bg-base" : "bg-dark/20"
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
+              activeTab === tab
+                ? "text-base after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-base"
+                : "text-dark/50 hover:text-dark"
             }`}
           >
-            <span
-              className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
-                settings.showAnnotations ? "left-[18px]" : "left-0.5"
-              }`}
-            />
+            {tab}
           </button>
-        </div>
+        ))}
+      </div>
 
+      {/* Tab content */}
+      {activeTab === "Art Pieces" && (
+        <div className="space-y-8">
+          <div className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm border border-dark/10">
+            <div>
+              <h3 className="text-sm font-semibold text-dark">Show Annotations</h3>
+              <p className="text-xs text-dark/50">Display descriptions and medium in the gallery modal</p>
+            </div>
+            <button
+              onClick={() => updateSettings({ showAnnotations: !settings.showAnnotations })}
+              className={`w-10 h-6 rounded-full transition-colors relative ${
+                settings.showAnnotations ? "bg-base" : "bg-dark/20"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
+                  settings.showAnnotations ? "left-[18px]" : "left-0.5"
+                }`}
+              />
+            </button>
+          </div>
+
+          <ArtworkUploader onUploaded={fetchArtworks} />
+
+          <div>
+            <h2 className="text-xl font-bold text-dark mb-4">
+              Manage Artworks ({artworks.length})
+            </h2>
+            {loading ? (
+              <p className="text-dark/50">Loading...</p>
+            ) : (
+              <ArtworkTable artworks={artworks} onRefresh={fetchArtworks} onUpdate={updateArtwork} />
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === "About Me" && (
+        <div className="space-y-8">
+          <LogoManager settings={settings} onUpdate={updateSettings} />
+          <AboutEditor settings={settings} onUpdate={updateSettings} />
+        </div>
+      )}
+
+      {activeTab === "Appearance" && (
         <div className="bg-white rounded-lg p-4 shadow-sm border border-dark/10">
-          <h3 className="text-sm font-semibold text-dark mb-4">Appearance</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
               <label className="text-sm font-medium text-dark/70 block mb-1">Gallery Layout</label>
@@ -118,32 +159,11 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+      )}
 
-        <Link
-          href="/admin/kiosk"
-          className="block bg-white rounded-lg p-4 shadow-sm border border-dark/10 hover:border-base/30 transition-colors"
-        >
-          <h3 className="text-sm font-semibold text-dark">Kiosk / Presentation Mode</h3>
-          <p className="text-xs text-dark/50">Configure fullscreen slideshow of selected artworks</p>
-        </Link>
-
-        <LogoManager settings={settings} onUpdate={updateSettings} />
-
-        <AboutEditor settings={settings} onUpdate={updateSettings} />
-
-        <ArtworkUploader onUploaded={fetchArtworks} />
-
-        <div>
-          <h2 className="text-xl font-bold text-dark mb-4">
-            Manage Artworks ({artworks.length})
-          </h2>
-          {loading ? (
-            <p className="text-dark/50">Loading...</p>
-          ) : (
-            <ArtworkTable artworks={artworks} onRefresh={fetchArtworks} onUpdate={updateArtwork} />
-          )}
-        </div>
-      </div>
+      {activeTab === "Kiosk" && (
+        <KioskEditor artworks={artworks} settings={settings} onUpdate={updateSettings} />
+      )}
     </div>
   );
 }
