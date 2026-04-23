@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { SiteSettings } from "@/lib/types";
 
@@ -14,6 +14,7 @@ const navLinks = [
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
@@ -23,6 +24,18 @@ export default function Header() {
       .then(setSettings)
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "k" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const tag = (e.target as HTMLElement).tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+        router.push("/kiosk");
+      }
+    };
+    document.addEventListener("keyup", handleKeyUp);
+    return () => document.removeEventListener("keyup", handleKeyUp);
+  }, [router]);
 
   const logoIcon = settings?.logoIconUrl || "/images/logos/arislogodark.svg";
   const logoName = settings?.logoNameUrl || "/images/logos/arisnamedark.svg";
@@ -39,13 +52,11 @@ export default function Header() {
               className="w-[50px] h-[50px] object-contain"
             />
           </Link>
-          <Link href="/kiosk" className="hidden sm:block">
-            <img
-              src={logoName}
-              alt="Aris Zhou"
-              className="h-[50px] w-auto object-contain"
-            />
-          </Link>
+          <img
+            src={logoName}
+            alt="Aris Zhou"
+            className="hidden sm:block h-[50px] w-auto object-contain"
+          />
         </div>
 
         {/* Mobile hamburger */}
