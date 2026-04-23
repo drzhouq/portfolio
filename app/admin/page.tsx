@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Artwork, SiteSettings, GalleryLayout } from "@/lib/types";
 import { AVAILABLE_FONTS, applyTheme } from "@/components/ThemeProvider";
 import ArtworkUploader from "@/components/admin/ArtworkUploader";
@@ -35,6 +35,8 @@ export default function AdminDashboard() {
     fetch(`/api/settings?t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).then(setSettings).catch(() => {});
   }, [fetchArtworks]);
 
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
   const updateSettings = async (updates: Partial<SiteSettings>) => {
     const merged = { ...settings, ...updates };
     setSettings(merged);
@@ -46,6 +48,23 @@ export default function AdminDashboard() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(merged),
     });
+  };
+
+  // Debounced version for rapid-fire inputs like range sliders
+  const updateSettingsDebounced = (updates: Partial<SiteSettings>) => {
+    const merged = { ...settings, ...updates };
+    setSettings(merged);
+    if (updates.headerSpacing !== undefined || updates.siteFont !== undefined) {
+      applyTheme(merged);
+    }
+    clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(merged),
+      });
+    }, 500);
   };
 
   return (
@@ -152,7 +171,7 @@ export default function AdminDashboard() {
                 max={160}
                 step={4}
                 value={settings.headerSpacing ?? 80}
-                onChange={(e) => updateSettings({ headerSpacing: Number(e.target.value) })}
+                onChange={(e) => updateSettingsDebounced({ headerSpacing: Number(e.target.value) })}
                 className="w-full"
               />
               <div className="flex justify-between text-xs text-dark/40 mt-1">
