@@ -35,7 +35,7 @@ export default function AdminDashboard() {
     fetch(`/api/settings?t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).then(setSettings).catch(() => {});
   }, [fetchArtworks]);
 
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const updateSettings = async (updates: Partial<SiteSettings>) => {
     const merged = { ...settings, ...updates };
