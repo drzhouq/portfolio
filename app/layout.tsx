@@ -33,7 +33,7 @@ export default function RootLayout({
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         />
       </head>
-      <body className={`${baloo.variable} font-baloo antialiased`}>
+      <body className={`${baloo.variable} antialiased`}>
         <ThemeProvider />
         <Header />
         <main className="min-h-screen" style={{ paddingTop: "var(--header-spacing)" }}>{children}</main>
