@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Artwork, SiteSettings, GalleryLayout } from "@/lib/types";
-import { AVAILABLE_FONTS } from "@/components/ThemeProvider";
+import { AVAILABLE_FONTS, applyTheme } from "@/components/ThemeProvider";
 import ArtworkUploader from "@/components/admin/ArtworkUploader";
 import ArtworkTable from "@/components/admin/ArtworkTable";
 import LogoManager from "@/components/admin/LogoManager";
@@ -38,6 +38,9 @@ export default function AdminDashboard() {
   const updateSettings = async (updates: Partial<SiteSettings>) => {
     const merged = { ...settings, ...updates };
     setSettings(merged);
+    if (updates.headerSpacing !== undefined || updates.siteFont !== undefined) {
+      applyTheme(merged);
+    }
     await fetch("/api/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },

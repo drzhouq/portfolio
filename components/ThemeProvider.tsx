@@ -16,32 +16,34 @@ const FONT_MAP: Record<string, string> = {
 
 export const AVAILABLE_FONTS = Object.keys(FONT_MAP);
 
+export function applyTheme(settings: { headerSpacing?: number; siteFont?: string }) {
+  const root = document.documentElement;
+
+  const spacing = settings.headerSpacing ?? 80;
+  root.style.setProperty("--header-spacing", `${spacing}px`);
+
+  const font = settings.siteFont || "Baloo 2";
+  const fontStack = FONT_MAP[font] || FONT_MAP["Baloo 2"];
+  root.style.setProperty("--site-font", fontStack);
+
+  // Load the Google Font if not already loaded
+  if (font !== "Baloo 2") {
+    const id = `gfont-${font.replace(/\s+/g, "-")}`;
+    if (!document.getElementById(id)) {
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;500;600;700&display=swap`;
+      document.head.appendChild(link);
+    }
+  }
+}
+
 export default function ThemeProvider() {
   useEffect(() => {
     fetch(`/api/settings?t=${Date.now()}`, { cache: "no-store" })
       .then((r) => r.json())
-      .then((s) => {
-        const root = document.documentElement;
-
-        const spacing = s.headerSpacing ?? 80;
-        root.style.setProperty("--header-spacing", `${spacing}px`);
-
-        const font = s.siteFont || "Baloo 2";
-        const fontStack = FONT_MAP[font] || FONT_MAP["Baloo 2"];
-        root.style.setProperty("--site-font", fontStack);
-
-        // Load the Google Font if not already loaded
-        if (font !== "Baloo 2") {
-          const id = `gfont-${font.replace(/\s+/g, "-")}`;
-          if (!document.getElementById(id)) {
-            const link = document.createElement("link");
-            link.id = id;
-            link.rel = "stylesheet";
-            link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;500;600;700&display=swap`;
-            document.head.appendChild(link);
-          }
-        }
-      })
+      .then((s) => applyTheme(s))
       .catch(() => {});
   }, []);
 
