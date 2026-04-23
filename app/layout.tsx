@@ -5,6 +5,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ThemeProvider from "@/components/ThemeProvider";
 
 const baloo = Baloo_2({
   subsets: ["latin"],
@@ -33,8 +34,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${baloo.variable} font-baloo antialiased`}>
+        <ThemeProvider />
         <Header />
-        <main className="pt-20 min-h-screen">{children}</main>
+        <main className="min-h-screen" style={{ paddingTop: "var(--header-spacing)" }}>{children}</main>
         <Footer />
         <Analytics />
         <SpeedInsights />

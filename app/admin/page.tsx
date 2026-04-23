@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Artwork, SiteSettings, GalleryLayout } from "@/lib/types";
+import { AVAILABLE_FONTS } from "@/components/ThemeProvider";
 import ArtworkUploader from "@/components/admin/ArtworkUploader";
 import ArtworkTable from "@/components/admin/ArtworkTable";
 import LogoManager from "@/components/admin/LogoManager";
@@ -69,22 +70,52 @@ export default function AdminDashboard() {
         </div>
 
         <div className="bg-white rounded-lg p-4 shadow-sm border border-dark/10">
-          <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-dark mb-4">Appearance</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
-              <h3 className="text-sm font-semibold text-dark">Gallery Layout</h3>
-              <p className="text-xs text-dark/50">Choose how artworks are displayed on gallery pages</p>
+              <label className="text-sm font-medium text-dark/70 block mb-1">Gallery Layout</label>
+              <select
+                value={settings.galleryLayout ?? "masonry"}
+                onChange={(e) => updateSettings({ galleryLayout: e.target.value as GalleryLayout })}
+                className="w-full border border-dark/20 rounded px-3 py-2 text-sm focus:outline-none focus:border-base"
+              >
+                <option value="masonry">Masonry</option>
+                <option value="grid">Grid</option>
+                <option value="featured">Featured</option>
+                <option value="horizontal">Horizontal Scroll</option>
+                <option value="justified">Justified</option>
+              </select>
             </div>
-            <select
-              value={settings.galleryLayout ?? "masonry"}
-              onChange={(e) => updateSettings({ galleryLayout: e.target.value as GalleryLayout })}
-              className="border border-dark/20 rounded px-3 py-2 text-sm focus:outline-none focus:border-base"
-            >
-              <option value="masonry">Masonry</option>
-              <option value="grid">Grid</option>
-              <option value="featured">Featured</option>
-              <option value="horizontal">Horizontal Scroll</option>
-              <option value="justified">Justified</option>
-            </select>
+            <div>
+              <label className="text-sm font-medium text-dark/70 block mb-1">Site Font</label>
+              <select
+                value={settings.siteFont ?? "Baloo 2"}
+                onChange={(e) => updateSettings({ siteFont: e.target.value })}
+                className="w-full border border-dark/20 rounded px-3 py-2 text-sm focus:outline-none focus:border-base"
+              >
+                {AVAILABLE_FONTS.map((font) => (
+                  <option key={font} value={font}>{font}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-dark/70 block mb-1">
+                Header Spacing ({settings.headerSpacing ?? 80}px)
+              </label>
+              <input
+                type="range"
+                min={60}
+                max={160}
+                step={4}
+                value={settings.headerSpacing ?? 80}
+                onChange={(e) => updateSettings({ headerSpacing: Number(e.target.value) })}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-dark/40 mt-1">
+                <span>60px</span>
+                <span>160px</span>
+              </div>
+            </div>
           </div>
         </div>
 

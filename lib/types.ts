@@ -35,6 +35,8 @@ export type GalleryLayout = 'masonry' | 'grid' | 'featured' | 'horizontal' | 'ju
 export interface SiteSettings {
   showAnnotations: boolean;
   galleryLayout?: GalleryLayout;
+  headerSpacing?: number;
+  siteFont?: string;
   logoIconUrl?: string | null;
   logoNameUrl?: string | null;
   profilePhotoUrl?: string | null;

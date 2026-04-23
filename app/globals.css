@@ -2,10 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --header-spacing: 80px;
+  --site-font: "Baloo 2", sans-serif;
+}
+
 body {
   background-color: #fff1db;
   color: #0d1f22;
-  font-family: "Baloo 2", sans-serif;
+  font-family: var(--site-font);
 }
 
 /* Gallery masonry columns */
