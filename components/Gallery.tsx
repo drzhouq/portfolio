@@ -8,6 +8,7 @@ import GalleryModal from "./GalleryModal";
 interface GalleryProps {
   artworks: Artwork[];
   layout?: GalleryLayout;
+  showAnnotations?: boolean;
 }
 
 function GalleryItem({
@@ -201,16 +202,8 @@ const layoutComponents: Record<GalleryLayout, React.FC<{ artworks: Artwork[]; on
   justified: JustifiedLayout,
 };
 
-export default function Gallery({ artworks, layout = "masonry" }: GalleryProps) {
+export default function Gallery({ artworks, layout = "masonry", showAnnotations = true }: GalleryProps) {
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
-  const [showAnnotations, setShowAnnotations] = useState(true);
-
-  useEffect(() => {
-    fetch(`/api/settings?t=${Date.now()}`, { cache: "no-store" })
-      .then((r) => r.json())
-      .then((s) => setShowAnnotations(s.showAnnotations ?? true))
-      .catch(() => {});
-  }, []);
 
   const sorted = [...artworks].sort((a, b) => a.order - b.order);
   const LayoutComponent = layoutComponents[layout] || layoutComponents.masonry;
