@@ -5,7 +5,9 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const settings = await getSettings();
-  return NextResponse.json(settings);
+  return NextResponse.json(settings, {
+    headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
+  });
 }
 
 export async function PUT(request: NextRequest) {

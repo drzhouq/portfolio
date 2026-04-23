@@ -7,8 +7,10 @@ export async function GET() {
   const settings = await getSettings();
   const kiosk = settings.kiosk;
 
+  const headers = { 'Cache-Control': 'no-store, no-cache, must-revalidate' };
+
   if (!kiosk || kiosk.artworkIds.length === 0) {
-    return NextResponse.json({ configured: false, artworks: [], config: null });
+    return NextResponse.json({ configured: false, artworks: [], config: null }, { headers });
   }
 
   const allArtworks = await getArtworks();
@@ -24,5 +26,5 @@ export async function GET() {
       showDescription: kiosk.showDescription ?? false,
       transition: kiosk.transition,
     },
-  });
+  }, { headers });
 }

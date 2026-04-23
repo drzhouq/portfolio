@@ -11,11 +11,13 @@ export async function GET() {
     const artworks = await getArtworks();
     const isAdmin = await verifyAuth();
 
+    const headers = { 'Cache-Control': 'no-store, no-cache, must-revalidate' };
+
     if (isAdmin) {
-      return NextResponse.json(artworks);
+      return NextResponse.json(artworks, { headers });
     }
 
-    return NextResponse.json(artworks.filter((a) => a.visible));
+    return NextResponse.json(artworks.filter((a) => a.visible), { headers });
   } catch (error) {
     console.error('GET /api/artworks error:', error);
     return NextResponse.json({ error: 'Failed to fetch artworks' }, { status: 500 });
