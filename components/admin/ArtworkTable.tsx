@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { Artwork } from "@/lib/types";
 import ArtworkEditModal from "./ArtworkEditModal";
 
-type SortKey = "title" | "category" | "views" | "avgTime" | "hearts" | "lastViewedAt" | "visible" | "order";
+type SortKey = "title" | "views" | "avgTime" | "hearts" | "lastViewedAt" | "visible" | "order";
 type SortDir = "asc" | "desc";
 
 function getAvgTime(a: Artwork): number {
@@ -17,9 +17,6 @@ function comparator(key: SortKey, dir: SortDir) {
     switch (key) {
       case "title":
         cmp = a.title.localeCompare(b.title);
-        break;
-      case "category":
-        cmp = a.category.localeCompare(b.category);
         break;
       case "views":
         cmp = a.views - b.views;
@@ -55,10 +52,21 @@ export default function ArtworkTable({ artworks, onRefresh, onUpdate }: ArtworkT
   const [deleting, setDeleting] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("order");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
+
+  const categories = useMemo(
+    () => Array.from(new Set(artworks.map((a) => a.category))).sort(),
+    [artworks]
+  );
+
+  const filtered = useMemo(
+    () => categoryFilter ? artworks.filter((a) => a.category === categoryFilter) : artworks,
+    [artworks, categoryFilter]
+  );
 
   const sorted = useMemo(
-    () => [...artworks].sort(comparator(sortKey, sortDir)),
-    [artworks, sortKey, sortDir]
+    () => [...filtered].sort(comparator(sortKey, sortDir)),
+    [filtered, sortKey, sortDir]
   );
 
   const handleSort = (key: SortKey) => {
@@ -125,6 +133,26 @@ export default function ArtworkTable({ artworks, onRefresh, onUpdate }: ArtworkT
 
   return (
     <>
+      <div className="flex items-center gap-3 mb-3">
+        <label className="text-sm font-medium text-dark/70">Category:</label>
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="border border-dark/20 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-base"
+        >
+          <option value="">All</option>
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat.replace("_", " ")}
+            </option>
+          ))}
+        </select>
+        {categoryFilter && (
+          <span className="text-xs text-dark/50">
+            {sorted.length} of {artworks.length}
+          </span>
+        )}
+      </div>
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -136,8 +164,8 @@ export default function ArtworkTable({ artworks, onRefresh, onUpdate }: ArtworkT
                 <th className={thClass} onClick={() => handleSort("title")}>
                   Title{sortIndicator("title")}
                 </th>
-                <th className={thClass} onClick={() => handleSort("category")}>
-                  Category{sortIndicator("category")}
+                <th className="px-4 py-3 text-sm font-medium text-dark/70">
+                  Category
                 </th>
                 <th className={thClass} onClick={() => handleSort("views")}>
                   Views{sortIndicator("views")}
