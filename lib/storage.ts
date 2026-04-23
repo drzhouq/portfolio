@@ -1,60 +1,27 @@
-import { list, put, del } from '@vercel/blob';
+import { readFile, writeFile, mkdir, unlink, access } from 'fs/promises';
+import { join } from 'path';
 import { Artwork, SiteSettings } from './types';
 
-const USE_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
-
-// --- Vercel Blob storage ---
+const DATA_DIR = join(process.cwd(), 'data');
+const ARTWORKS_JSON = join(DATA_DIR, 'artworks.json');
+const SETTINGS_JSON = join(DATA_DIR, 'settings.json');
+const UPLOAD_DIR = join(process.cwd(), 'public', 'uploads');
 
 const DEFAULT_SETTINGS: SiteSettings = { showAnnotations: true };
 
-async function getSettingsBlob(): Promise<SiteSettings> {
-  const { blobs } = await list({ prefix: 'settings.json' });
-  if (blobs.length === 0) return DEFAULT_SETTINGS;
-  const response = await fetch(blobs[0].downloadUrl, { cache: 'no-store' });
-  return { ...DEFAULT_SETTINGS, ...(await response.json()) };
+async function ensureDirs() {
+  await mkdir(DATA_DIR, { recursive: true });
+  await mkdir(UPLOAD_DIR, { recursive: true });
 }
 
-async function saveSettingsBlob(settings: SiteSettings): Promise<void> {
-  await put('settings.json', JSON.stringify(settings, null, 2), {
-    access: 'public',
-    addRandomSuffix: false,
-    allowOverwrite: true,
-  });
+async function fileExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
 }
-
-async function getArtworksBlob(): Promise<Artwork[]> {
-  const { blobs } = await list({ prefix: 'artworks.json' });
-  if (blobs.length === 0) return [];
-  const response = await fetch(blobs[0].downloadUrl, { cache: 'no-store' });
-  return await response.json();
-}
-
-async function saveArtworksBlob(artworks: Artwork[]): Promise<void> {
-  await put('artworks.json', JSON.stringify(artworks, null, 2), {
-    access: 'public',
-    addRandomSuffix: false,
-    allowOverwrite: true,
-  });
-}
-
-async function uploadImageBlob(file: File): Promise<string> {
-  const blob = await put(`artworks/${Date.now()}-${file.name}`, file, {
-    access: 'public',
-  });
-  return blob.url;
-}
-
-async function deleteImageBlob(url: string): Promise<void> {
-  try { await del(url); } catch { /* may already be deleted */ }
-}
-
-// --- Local storage (lazy-loaded to avoid fs import in production) ---
-
-async function getLocalModule() {
-  return await import('./storage-local');
-}
-
-// --- Exports ---
 
 function backfillDefaults(artworks: Artwork[]): Artwork[] {
   return artworks.map((a) => ({
@@ -67,36 +34,43 @@ function backfillDefaults(artworks: Artwork[]): Artwork[] {
 }
 
 export async function getArtworks(): Promise<Artwork[]> {
-  const raw = USE_BLOB ? await getArtworksBlob() : await (await getLocalModule()).getArtworksLocal();
+  await ensureDirs();
+  if (!(await fileExists(ARTWORKS_JSON))) return [];
+  const raw: Artwork[] = JSON.parse(await readFile(ARTWORKS_JSON, 'utf-8'));
   return backfillDefaults(raw);
 }
 
 export async function saveArtworks(artworks: Artwork[]): Promise<void> {
-  if (USE_BLOB) return saveArtworksBlob(artworks);
-  const local = await getLocalModule();
-  local.saveArtworksLocal(artworks);
-}
-
-export async function uploadImage(file: File): Promise<string> {
-  if (USE_BLOB) return uploadImageBlob(file);
-  const local = await getLocalModule();
-  return local.uploadImageLocal(file);
+  await ensureDirs();
+  await writeFile(ARTWORKS_JSON, JSON.stringify(artworks, null, 2));
 }
 
 export async function getSettings(): Promise<SiteSettings> {
-  if (USE_BLOB) return getSettingsBlob();
-  const local = await getLocalModule();
-  return { ...DEFAULT_SETTINGS, ...local.getSettingsLocal() };
+  await ensureDirs();
+  if (!(await fileExists(SETTINGS_JSON))) return DEFAULT_SETTINGS;
+  const data = JSON.parse(await readFile(SETTINGS_JSON, 'utf-8'));
+  return { ...DEFAULT_SETTINGS, ...data };
 }
 
 export async function saveSettings(settings: SiteSettings): Promise<void> {
-  if (USE_BLOB) return saveSettingsBlob(settings);
-  const local = await getLocalModule();
-  local.saveSettingsLocal(settings);
+  await ensureDirs();
+  await writeFile(SETTINGS_JSON, JSON.stringify(settings, null, 2));
+}
+
+export async function uploadImage(file: File): Promise<string> {
+  await ensureDirs();
+  const bytes = await file.arrayBuffer();
+  const filename = `${Date.now()}-${file.name}`;
+  const filepath = join(UPLOAD_DIR, filename);
+  await writeFile(filepath, Buffer.from(bytes));
+  return `/uploads/${filename}`;
 }
 
 export async function deleteImage(url: string): Promise<void> {
-  if (USE_BLOB) return deleteImageBlob(url);
-  const local = await getLocalModule();
-  local.deleteImageLocal(url);
+  if (url.startsWith('/uploads/')) {
+    const filepath = join(process.cwd(), 'public', url);
+    if (await fileExists(filepath)) {
+      await unlink(filepath);
+    }
+  }
 }

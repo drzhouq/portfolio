@@ -1,0 +1,15 @@
+services:
+  portfolio:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    volumes:
+      - app-data:/app/data
+      - app-uploads:/app/public/uploads
+    restart: unless-stopped
+
+volumes:
+  app-data:
+  app-uploads:

@@ -4,24 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Illustration portfolio website for Aris Zhou, built with Next.js 14 (App Router), React 18, TypeScript, and Tailwind CSS. Deployed on Vercel.
+Illustration portfolio website for Aris Zhou, built with Next.js 14 (App Router), React 18, TypeScript, and Tailwind CSS. Deployed on a VPS via Coolify (Docker).
 
 ## Commands
 
 - `npm run dev` — Start dev server (localhost:3000)
 - `npm run build` — Production build
 - `npm run lint` — ESLint
-- `npx tsx scripts/migrate-blob.ts` — Migrate local data to Vercel Blob
+- `docker compose up --build` — Build and run locally with Docker
 
 ## Architecture
 
 ### Storage Layer (lib/storage.ts)
 
-Dual-mode storage abstracted behind a single interface:
-- **Production**: Vercel Blob (`@vercel/blob`) — activated when `BLOB_READ_WRITE_TOKEN` env var is set
-- **Local dev**: JSON files in `data/` directory via `lib/storage-local.ts` (lazy-imported to avoid fs in production)
-
-Artworks and settings are stored as JSON blobs (`artworks.json`, `settings.json`). Images go to `artworks/` prefix in Blob storage or `public/uploads/` locally.
+Local file storage using `fs/promises`:
+- JSON data files (`artworks.json`, `settings.json`) in `data/` directory
+- Uploaded images in `public/uploads/`
+- Directories are created automatically if they don't exist
+- Data and uploads are persisted via Docker volumes in production
 
 ### Auth
 
