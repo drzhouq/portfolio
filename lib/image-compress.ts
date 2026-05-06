@@ -1,3 +1,7 @@
+// Tuned to keep each image well under Vercel's ~4.5 MB function request cap.
+// When we move off Vercel (or switch merch uploads to direct-to-Blob client
+// uploads), relax these — ideally pass originals through untouched so prints
+// and originals retain full resolution.
 const MAX_EDGE = 2000;
 const QUALITY = 0.85;
 const SKIP_THRESHOLD_BYTES = 1.5 * 1024 * 1024;
