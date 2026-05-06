@@ -45,14 +45,20 @@ export default function MerchUploader({ categories, onUploaded }: MerchUploaderP
     formData.append("category", category);
     formData.append("externalUrl", externalUrl);
 
-    await fetch("/api/merch", { method: "POST", body: formData });
+    const res = await fetch("/api/merch", { method: "POST", body: formData });
+    setUploading(false);
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      alert(`Upload failed (${res.status}): ${body || "unknown error"}`);
+      return;
+    }
 
     setFiles([]);
     setTitle("");
     setDescription("");
     setPrice("");
     setExternalUrl("");
-    setUploading(false);
     onUploaded();
   };
 

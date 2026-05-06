@@ -48,7 +48,7 @@ export async function PUT(
       }
     }
 
-    const newFiles = formData.getAll('newImages').filter((v): v is File => v instanceof File);
+    const newFiles = formData.getAll('newImages').filter((v) => typeof v !== 'string') as File[];
     if (newFiles.length > 0) {
       const newUrls: string[] = [];
       for (const file of newFiles) {

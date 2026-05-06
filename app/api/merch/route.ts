@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
   }
 
   const formData = await request.formData();
-  const files = formData.getAll('images').filter((v): v is File => v instanceof File);
+  const files = formData.getAll('images').filter((v) => typeof v !== 'string') as File[];
   if (files.length === 0) {
     return NextResponse.json({ error: 'At least one image required' }, { status: 400 });
   }
