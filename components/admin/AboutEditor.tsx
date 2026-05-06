@@ -26,6 +26,7 @@ interface AboutEditorProps {
 export default function AboutEditor({ settings, onUpdate }: AboutEditorProps) {
   const [bio, setBio] = useState<string[]>(settings.aboutBio ?? DEFAULT_BIO);
   const [skills, setSkills] = useState<AboutSkill[]>(settings.aboutSkills ?? DEFAULT_SKILLS);
+  const [shopIntro, setShopIntro] = useState<string>(settings.shopIntro ?? "");
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
@@ -65,7 +66,7 @@ export default function AboutEditor({ settings, onUpdate }: AboutEditorProps) {
 
   const handleSave = async () => {
     setSaving(true);
-    await onUpdate({ aboutBio: bio, aboutSkills: skills });
+    await onUpdate({ aboutBio: bio, aboutSkills: skills, shopIntro });
     setSaving(false);
     setDirty(false);
   };
@@ -73,8 +74,13 @@ export default function AboutEditor({ settings, onUpdate }: AboutEditorProps) {
   const handleReset = async () => {
     setBio(DEFAULT_BIO);
     setSkills(DEFAULT_SKILLS);
+    setShopIntro("");
     setSaving(true);
-    await onUpdate({ aboutBio: null as unknown as string[], aboutSkills: null as unknown as AboutSkill[] });
+    await onUpdate({
+      aboutBio: null as unknown as string[],
+      aboutSkills: null as unknown as AboutSkill[],
+      shopIntro: null as unknown as string,
+    });
     setSaving(false);
     setDirty(false);
   };
@@ -131,6 +137,24 @@ export default function AboutEditor({ settings, onUpdate }: AboutEditorProps) {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Shop intro */}
+      <div className="mb-6">
+        <label className="text-sm font-medium text-dark/70 block mb-2">
+          Shop Intro Copy
+          <span className="text-xs text-dark/40 ml-2">(shown at the top of /shop)</span>
+        </label>
+        <textarea
+          value={shopIntro}
+          onChange={(e) => {
+            setShopIntro(e.target.value);
+            setDirty(true);
+          }}
+          rows={3}
+          placeholder="e.g. Hand-screened prints, stickers, and a few originals — shipped from NYC."
+          className="w-full border border-dark/20 rounded px-3 py-2 text-sm focus:outline-none focus:border-base"
+        />
       </div>
 
       {/* Skills */}

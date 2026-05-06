@@ -32,6 +32,22 @@ export interface KioskConfig {
 
 export type GalleryLayout = 'masonry' | 'grid' | 'featured' | 'horizontal' | 'justified';
 
+export interface MerchItem {
+  id: string;
+  title: string;
+  description: string;
+  price: string;
+  category: string;
+  images: string[];
+  externalUrl: string | null;
+  visible: boolean;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const DEFAULT_MERCH_CATEGORIES = ['prints', 'stickers', 'keychains', 'apparel'] as const;
+
 export interface SiteSettings {
   showAnnotations: boolean;
   galleryLayout?: GalleryLayout;
@@ -43,4 +59,6 @@ export interface SiteSettings {
   aboutBio?: string[];
   aboutSkills?: AboutSkill[];
   kiosk?: KioskConfig;
+  merchCategories?: string[];
+  shopIntro?: string;
 }

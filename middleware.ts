@@ -17,6 +17,7 @@ export async function middleware(request: NextRequest) {
   const needsAuth =
     (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) ||
     (pathname.startsWith('/api/artworks') && ['POST', 'PUT', 'DELETE'].includes(method) && !isAnalytics) ||
+    (pathname.startsWith('/api/merch') && ['POST', 'PUT', 'DELETE'].includes(method)) ||
     (pathname.startsWith('/api/settings') && ['PUT', 'DELETE'].includes(method)) ||
     (pathname.startsWith('/api/upload') && method === 'POST');
 
@@ -36,5 +37,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/artworks/:path*', '/api/settings/:path*', '/api/upload'],
+  matcher: ['/admin/:path*', '/api/artworks/:path*', '/api/merch/:path*', '/api/settings/:path*', '/api/upload'],
 };

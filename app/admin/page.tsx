@@ -1,20 +1,25 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Artwork, SiteSettings, GalleryLayout } from "@/lib/types";
+import { Artwork, MerchItem, SiteSettings, GalleryLayout, DEFAULT_MERCH_CATEGORIES } from "@/lib/types";
 import { AVAILABLE_FONTS, applyTheme } from "@/components/ThemeProvider";
 import ArtworkUploader from "@/components/admin/ArtworkUploader";
 import ArtworkTable from "@/components/admin/ArtworkTable";
 import LogoManager from "@/components/admin/LogoManager";
 import AboutEditor from "@/components/admin/AboutEditor";
 import KioskEditor from "@/components/admin/KioskEditor";
+import MerchUploader from "@/components/admin/MerchUploader";
+import MerchTable from "@/components/admin/MerchTable";
+import MerchCategoryEditor from "@/components/admin/MerchCategoryEditor";
 
-const TABS = ["Art Pieces", "About Me", "Appearance", "Kiosk"] as const;
+const TABS = ["Art Pieces", "Merch", "About Me", "Appearance", "Kiosk"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function AdminDashboard() {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
+  const [merch, setMerch] = useState<MerchItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [merchLoading, setMerchLoading] = useState(true);
   const [settings, setSettings] = useState<SiteSettings>({ showAnnotations: true });
   const [activeTab, setActiveTab] = useState<Tab>("Art Pieces");
 
@@ -26,14 +31,29 @@ export default function AdminDashboard() {
     setLoading(false);
   }, []);
 
+  const fetchMerch = useCallback(async () => {
+    setMerchLoading(true);
+    const res = await fetch(`/api/merch?t=${Date.now()}`, { cache: "no-store" });
+    const data = await res.json();
+    setMerch(data);
+    setMerchLoading(false);
+  }, []);
+
   const updateArtwork = useCallback((updated: Artwork) => {
     setArtworks((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
   }, []);
 
+  const updateMerchItem = useCallback((updated: MerchItem) => {
+    setMerch((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+  }, []);
+
   useEffect(() => {
     fetchArtworks();
+    fetchMerch();
     fetch(`/api/settings?t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).then(setSettings).catch(() => {});
-  }, [fetchArtworks]);
+  }, [fetchArtworks, fetchMerch]);
+
+  const merchCategories = settings.merchCategories ?? [...DEFAULT_MERCH_CATEGORIES];
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -120,6 +140,28 @@ export default function AdminDashboard() {
               <p className="text-dark/50">Loading...</p>
             ) : (
               <ArtworkTable artworks={artworks} onRefresh={fetchArtworks} onUpdate={updateArtwork} />
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === "Merch" && (
+        <div className="space-y-8">
+          <MerchCategoryEditor settings={settings} onUpdate={updateSettings} />
+          <MerchUploader categories={merchCategories} onUploaded={fetchMerch} />
+          <div>
+            <h2 className="text-xl font-bold text-dark mb-4">
+              Manage Merch ({merch.length})
+            </h2>
+            {merchLoading ? (
+              <p className="text-dark/50">Loading...</p>
+            ) : (
+              <MerchTable
+                items={merch}
+                categories={merchCategories}
+                onRefresh={fetchMerch}
+                onUpdate={updateMerchItem}
+              />
             )}
           </div>
         </div>

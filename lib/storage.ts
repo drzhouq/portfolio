@@ -1,5 +1,5 @@
 import { list, put, del } from '@vercel/blob';
-import { Artwork, SiteSettings } from './types';
+import { Artwork, MerchItem, SiteSettings } from './types';
 
 const USE_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
 
@@ -37,8 +37,23 @@ async function saveArtworksBlob(artworks: Artwork[]): Promise<void> {
   });
 }
 
-async function uploadImageBlob(file: File): Promise<string> {
-  const blob = await put(`artworks/${Date.now()}-${file.name}`, file, {
+async function getMerchBlob(): Promise<MerchItem[]> {
+  const { blobs } = await list({ prefix: 'merch.json' });
+  if (blobs.length === 0) return [];
+  const response = await fetch(blobs[0].downloadUrl, { cache: 'no-store' });
+  return await response.json();
+}
+
+async function saveMerchBlob(items: MerchItem[]): Promise<void> {
+  await put('merch.json', JSON.stringify(items, null, 2), {
+    access: 'public',
+    addRandomSuffix: false,
+    allowOverwrite: true,
+  });
+}
+
+async function uploadImageBlob(file: File, prefix: string): Promise<string> {
+  const blob = await put(`${prefix}/${Date.now()}-${file.name}`, file, {
     access: 'public',
   });
   return blob.url;
@@ -77,10 +92,22 @@ export async function saveArtworks(artworks: Artwork[]): Promise<void> {
   local.saveArtworksLocal(artworks);
 }
 
-export async function uploadImage(file: File): Promise<string> {
-  if (USE_BLOB) return uploadImageBlob(file);
+export async function getMerch(): Promise<MerchItem[]> {
+  if (USE_BLOB) return getMerchBlob();
   const local = await getLocalModule();
-  return local.uploadImageLocal(file);
+  return local.getMerchLocal();
+}
+
+export async function saveMerch(items: MerchItem[]): Promise<void> {
+  if (USE_BLOB) return saveMerchBlob(items);
+  const local = await getLocalModule();
+  local.saveMerchLocal(items);
+}
+
+export async function uploadImage(file: File, prefix: string = 'artworks'): Promise<string> {
+  if (USE_BLOB) return uploadImageBlob(file, prefix);
+  const local = await getLocalModule();
+  return local.uploadImageLocal(file, prefix);
 }
 
 export async function getSettings(): Promise<SiteSettings> {

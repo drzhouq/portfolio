@@ -9,6 +9,7 @@ const navLinks = [
   { title: "Illustrations", url: "/" },
   { title: "Sketchbook", url: "/sketchbook" },
   { title: "Comics", url: "/comics" },
+  { title: "Shop", url: "/shop" },
   { title: "About Me", url: "/about" },
 ];
 
