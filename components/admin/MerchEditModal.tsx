@@ -2,6 +2,17 @@
 
 import { useRef, useState } from "react";
 import { MerchItem } from "@/lib/types";
+import { compressImages } from "@/lib/image-compress";
+
+const MAX_TOTAL_BYTES = 4 * 1024 * 1024;
+
+function totalBytes(files: File[]): number {
+  return files.reduce((s, f) => s + f.size, 0);
+}
+
+function formatMB(bytes: number): string {
+  return (bytes / 1024 / 1024).toFixed(1) + " MB";
+}
 
 interface MerchEditModalProps {
   item: MerchItem;
@@ -41,6 +52,17 @@ export default function MerchEditModal({ item, categories, onSave, onClose }: Me
     }
 
     setSaving(true);
+
+    const compressed = await compressImages(newFiles);
+    const total = totalBytes(compressed);
+    if (total > MAX_TOTAL_BYTES) {
+      setSaving(false);
+      alert(
+        `Combined new-image size is ${formatMB(total)} after compression. Vercel caps uploads at ~4.5 MB per request — remove or shrink images so the total is under 4 MB.`
+      );
+      return;
+    }
+
     const formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
@@ -49,14 +71,15 @@ export default function MerchEditModal({ item, categories, onSave, onClose }: Me
     formData.append("externalUrl", externalUrl);
     formData.append("order", String(order));
     formData.append("images", JSON.stringify(images));
-    newFiles.forEach((f) => formData.append("newImages", f));
+    compressed.forEach((f) => formData.append("newImages", f));
 
     const res = await fetch(`/api/merch/${item.id}`, { method: "PUT", body: formData });
     if (res.ok) {
       const updated: MerchItem = await res.json();
       onSave(updated);
     } else {
-      alert("Failed to save item.");
+      const body = await res.text().catch(() => "");
+      alert(`Failed to save item (${res.status}): ${body || "unknown error"}`);
     }
     setSaving(false);
   };

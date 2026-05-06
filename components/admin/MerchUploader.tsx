@@ -1,6 +1,17 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { compressImages } from "@/lib/image-compress";
+
+const MAX_TOTAL_BYTES = 4 * 1024 * 1024;
+
+function totalBytes(files: File[]): number {
+  return files.reduce((s, f) => s + f.size, 0);
+}
+
+function formatMB(bytes: number): string {
+  return (bytes / 1024 / 1024).toFixed(1) + " MB";
+}
 
 interface MerchUploaderProps {
   categories: string[];
@@ -37,8 +48,18 @@ export default function MerchUploader({ categories, onUploaded }: MerchUploaderP
     if (files.length === 0) return;
     setUploading(true);
 
+    const compressed = await compressImages(files);
+    const total = totalBytes(compressed);
+    if (total > MAX_TOTAL_BYTES) {
+      setUploading(false);
+      alert(
+        `Combined image size is ${formatMB(total)} after compression. Vercel caps uploads at ~4.5 MB per request — please remove or shrink images so the total is under 4 MB.`
+      );
+      return;
+    }
+
     const formData = new FormData();
-    files.forEach((f) => formData.append("images", f));
+    compressed.forEach((f) => formData.append("images", f));
     formData.append("title", title || files[0].name.replace(/\.[^.]+$/, ""));
     formData.append("description", description);
     formData.append("price", price);
