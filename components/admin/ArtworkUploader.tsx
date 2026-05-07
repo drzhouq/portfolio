@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Artwork } from "@/lib/types";
+import { compressImage } from "@/lib/image-compress";
 
 interface ArtworkUploaderProps {
   onUploaded: () => void;
@@ -39,9 +40,12 @@ export default function ArtworkUploader({ onUploaded }: ArtworkUploaderProps) {
     setUploading(true);
     setProgress(0);
 
+    const failures: string[] = [];
     for (let i = 0; i < files.length; i++) {
+      const compressed = await compressImage(files[i]);
+
       const formData = new FormData();
-      formData.append("image", files[i]);
+      formData.append("image", compressed);
       formData.append("category", category);
       formData.append(
         "title",
@@ -51,8 +55,18 @@ export default function ArtworkUploader({ onUploaded }: ArtworkUploaderProps) {
       formData.append("annotation", annotation);
       formData.append("tags", tags);
 
-      await fetch("/api/artworks", { method: "POST", body: formData });
+      const res = await fetch("/api/artworks", { method: "POST", body: formData });
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        failures.push(`${files[i].name} (${res.status}): ${body || "unknown error"}`);
+      }
       setProgress(Math.round(((i + 1) / files.length) * 100));
+    }
+
+    setUploading(false);
+
+    if (failures.length > 0) {
+      alert(`Some uploads failed:\n${failures.join("\n")}`);
     }
 
     setFiles([]);
@@ -60,7 +74,6 @@ export default function ArtworkUploader({ onUploaded }: ArtworkUploaderProps) {
     setMedium("");
     setAnnotation("");
     setTags("");
-    setUploading(false);
     onUploaded();
   };
 
