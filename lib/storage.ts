@@ -1,4 +1,4 @@
-import { list, put, del } from '@vercel/blob';
+import { put, del } from '@vercel/blob';
 import { Artwork, MerchItem, SiteSettings } from './types';
 
 const USE_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
@@ -7,10 +7,24 @@ const USE_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
 
 const DEFAULT_SETTINGS: SiteSettings = { showAnnotations: true };
 
+// Public blobs are saved with a stable, predictable path (addRandomSuffix: false),
+// so we read them by fetching their public URL directly instead of calling list().
+// list() is a Vercel "advanced operation" that's tightly rate-limited on the Hobby
+// plan (2k/mo) — calling it on every request exhausts the quota and pauses the store.
+// A plain CDN fetch only counts as data transfer, so reads become effectively free.
+function blobPublicUrl(pathname: string): string {
+  // Allow an explicit override if token-based derivation ever fails.
+  const explicit = process.env.BLOB_PUBLIC_BASE_URL;
+  if (explicit) return `${explicit.replace(/\/+$/, '')}/${pathname}`;
+  // Token format: vercel_blob_rw_<STORE_ID>_<RANDOM>; public host is
+  // https://<STORE_ID>.public.blob.vercel-storage.com
+  const storeId = (process.env.BLOB_READ_WRITE_TOKEN ?? '').split('_')[3] ?? '';
+  return `https://${storeId}.public.blob.vercel-storage.com/${pathname}`;
+}
+
 async function getSettingsBlob(): Promise<SiteSettings> {
-  const { blobs } = await list({ prefix: 'settings.json' });
-  if (blobs.length === 0) return DEFAULT_SETTINGS;
-  const response = await fetch(blobs[0].downloadUrl, { cache: 'no-store' });
+  const response = await fetch(blobPublicUrl('settings.json'), { cache: 'no-store' });
+  if (!response.ok) return DEFAULT_SETTINGS;
   return { ...DEFAULT_SETTINGS, ...(await response.json()) };
 }
 
@@ -23,9 +37,8 @@ async function saveSettingsBlob(settings: SiteSettings): Promise<void> {
 }
 
 async function getArtworksBlob(): Promise<Artwork[]> {
-  const { blobs } = await list({ prefix: 'artworks.json' });
-  if (blobs.length === 0) return [];
-  const response = await fetch(blobs[0].downloadUrl, { cache: 'no-store' });
+  const response = await fetch(blobPublicUrl('artworks.json'), { cache: 'no-store' });
+  if (!response.ok) return [];
   return await response.json();
 }
 
@@ -38,9 +51,8 @@ async function saveArtworksBlob(artworks: Artwork[]): Promise<void> {
 }
 
 async function getMerchBlob(): Promise<MerchItem[]> {
-  const { blobs } = await list({ prefix: 'merch.json' });
-  if (blobs.length === 0) return [];
-  const response = await fetch(blobs[0].downloadUrl, { cache: 'no-store' });
+  const response = await fetch(blobPublicUrl('merch.json'), { cache: 'no-store' });
+  if (!response.ok) return [];
   return await response.json();
 }
 

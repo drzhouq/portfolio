@@ -19,11 +19,15 @@ export default function GalleryPage({ category }: GalleryPageProps) {
   useEffect(() => {
     // Fetch artworks first (blocks rendering), settings in parallel (non-blocking)
     fetch(`/api/artworks?t=${Date.now()}`, { cache: "no-store" })
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`Failed to load artworks: ${r.status}`);
+        return r.json();
+      })
       .then((data: Artwork[]) => {
         setArtworks(data.filter((a) => a.category === category));
-        setLoading(false);
-      });
+      })
+      .catch(() => setArtworks([]))
+      .finally(() => setLoading(false));
 
     fetch(`/api/settings?t=${Date.now()}`, { cache: "no-store" })
       .then((r) => r.json())
