@@ -8,7 +8,10 @@
       "bucket_name": "portfolio-assets"
     }
   ],
+  // ADMIN_PASSWORD is NOT here on purpose — it's a runtime secret, set via:
+  //   npx wrangler secret put ADMIN_PASSWORD
   "vars": {
-    "ADMIN_PASSWORD": ""
+    "R2_PUBLIC_URL": "https://pub-3d295c08d65c43f1b946e3df330ff420.r2.dev"
   }
 }
+
