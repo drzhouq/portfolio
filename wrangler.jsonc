@@ -1,7 +1,12 @@
 {
   "name": "portfolio",
+  "main": ".open-next/worker.js",
   "compatibility_date": "2025-04-01",
   "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": ".open-next/assets"
+  },
   "r2_buckets": [
     {
       "binding": "PORTFOLIO_BUCKET",
