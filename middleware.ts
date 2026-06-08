@@ -8,7 +8,20 @@ async function hashToken(password: string): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+const CANONICAL_HOST = 'ariszhou.art';
+const REDIRECT_HOSTS = new Set(['www.ariszhou.art', 'portfolio.ariszhou.art']);
+
 export async function middleware(request: NextRequest) {
+  // Canonical host: 301 www/portfolio to the bare domain, preserving path + query.
+  const host = request.headers.get('host') ?? '';
+  if (REDIRECT_HOSTS.has(host)) {
+    const url = request.nextUrl.clone();
+    url.protocol = 'https:';
+    url.host = CANONICAL_HOST;
+    url.port = '';
+    return NextResponse.redirect(url, 301);
+  }
+
   const { pathname } = request.nextUrl;
   const method = request.method;
 
@@ -37,5 +50,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/artworks/:path*', '/api/merch/:path*', '/api/settings/:path*', '/api/upload'],
+  // Broad matcher so the canonical-host redirect applies site-wide; the auth
+  // checks above remain scoped to admin/api paths by their own conditions.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
